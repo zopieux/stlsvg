@@ -1,0 +1,36 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install nixpkgs
+        uses: cachix/install-nix-action@v15
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Print nixpkgs version
+        run: nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Deploy on GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          folder: dist
+          token: ${{ secrets.DEPLOY_TOKEN }}
+          repository-name: zopieux/zopieux.github.io
+          branch: master
+          target-folder: stlsvg
+          commit-message: Deploy stlsvg.
+          git-config-user: Alexandre Macabies
+          git-config-email: <web+oss@zopieux.com>

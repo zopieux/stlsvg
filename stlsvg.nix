@@ -38,7 +38,10 @@ let
     '';
   });
 
-  myboost = builtins.fetchTarball "http://downloads.sourceforge.net/project/boost/boost/1.79.0/boost_1_79_0.tar.bz2";
+  myboost = builtins.fetchTarball {
+    url = "http://downloads.sourceforge.net/project/boost/boost/1.79.0/boost_1_79_0.tar.bz2";
+    sha256 = "080fr3y6xyb02k7zdq647rzmsfxzic47yjzqj2kvmqhgkpsj42m1";
+  };
 
   mycgal = (cgal_5.override { inherit stdenv; }).overrideDerivation (old: {
     propagatedBuildInputs = [ mygmp mympfr ];
@@ -80,7 +83,6 @@ stdenv.mkDerivation rec {
     HOME=$TMPDIR
     emcmake cmake . $cmakeFlags \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$out \
       -DCMAKE_INSTALL_PREFIX=$out \
       -DGMP_INCLUDE_DIR:STRING=${mygmp.dev}/include -DGMP_LIBRARIES:STRING=${mygmp}/lib/libgmp.so \
       -DMPFR_INCLUDE_DIR:STRING=${mympfr.dev}/include -DMPFR_LIBRARIES:STRING=${mympfr}/lib/libmpfr.so \

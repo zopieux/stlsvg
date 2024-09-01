@@ -1,0 +1,34 @@
+diff --git a/include/CGAL/boost/graph/iterator.h b/include/CGAL/boost/graph/iterator.h
+index effbdee..96df184 100644
+--- a/include/CGAL/boost/graph/iterator.h
++++ b/include/CGAL/boost/graph/iterator.h
+@@ -215,9 +215,4 @@ public:
+ #ifndef DOXYGEN_RUNNING
+ 
+-  explicit operator bool() const
+-  {
+-    return (! (this->base() == nullptr));
+-  }
+-
+   bool operator==( const Self& i) const {
+     CGAL_assertion( anchor == anchor);
+@@ -309,9 +304,4 @@ public:
+ #ifndef DOXYGEN_RUNNING
+ 
+-  explicit operator bool() const
+-  {
+-    return (! (this->base() == nullptr));
+-  }
+-
+   bool operator==( const Self& i) const {
+     CGAL_assertion( anchor == anchor);
+@@ -401,9 +391,4 @@ public:
+   const value_type* operator -> ( ) const { return &pos; }
+ 
+-  explicit operator bool() const
+-  {
+-    return (! (this->base() == nullptr));
+-  }
+-
+   bool operator==( const Self& i) const {
+     CGAL_assertion( anchor == anchor);

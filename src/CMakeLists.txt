@@ -26,4 +26,4 @@ set(SHELL ${CMAKE_CURRENT_SOURCE_DIR}/emshell.html)
 #   --emrun --emit-symbol-map -s DEMANGLE_SUPPORT=1 -s SAFE_HEAP=1
 set_target_properties(stlsvg PROPERTIES
         LINK_FLAGS
-        "--bind --shell-file ${SHELL} --no-heap-copy -O3 -s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s ASYNCIFY=1")
+        "--bind --shell-file ${SHELL} --no-heap-copy -O3 -s ALLOW_MEMORY_GROWTH=1 -s MINIFY_HTML=0 -s WASM=1 -s ASYNCIFY=1")

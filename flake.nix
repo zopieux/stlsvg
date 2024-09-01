@@ -1,17 +1,15 @@
 {
   description = "stlsvg";
   inputs = {
-    # More recent nixpkgs makes wasm-ld error out on duplicate symbols in the
-    # -D<X>_LIBRARIES=.so overrides. -_-
-    nixpkgs.url = "github:nixos/nixpkgs/22.05";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-24.05";
+    flake-utils.url = "github:numtide/flake-utils";
   };
-  outputs = { self, nixpkgs }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
-    in
+  outputs = { self, flake-utils, nixpkgs }: flake-utils.lib.eachDefaultSystem (system:
+    let pkgs = import nixpkgs { inherit system; }; in rec
     {
-      packages.${system}.stlsvg = pkgs.callPackage ./stlsvg.nix {};
-      defaultPackage.${system} = self.packages.${system}.stlsvg;
-    };
+      defaultPackage = pkgs.callPackage ./stlsvg.nix { };
+      devShell = pkgs.mkShell {
+        inputsFrom = [ defaultPackage ];
+      };
+    });
 }

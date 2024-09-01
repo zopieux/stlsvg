@@ -19,7 +19,7 @@ jobs:
         run: ./build.sh
 
       - name: Deploy on GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        uses: JamesIves/github-pages-deploy-action@v4.6.4
         with:
           folder: dist
           token: ${{ secrets.DEPLOY_TOKEN }}

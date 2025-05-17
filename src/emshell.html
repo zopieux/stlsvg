@@ -1,55 +1,56 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>stl → svg ⋅ by @zopieux</title>
-<link id="favicon" rel="shortcut icon" type="image/svg+xml"
-    href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgwIiBoZWlnaHQ9IjEwODAiPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIxMiI+PHBhdGggZD0ibTYwOS4xIDk4MC40IDEyLTU3LjdtMzk1LjEtMzgzLjRhODcxMjQyNjUgODcxMjQyNjUgMCAwIDAtMzk1IDM4My40TDExMy40IDQwMC4yIi8+PHBhdGggZD0iTTExMy41IDQwMC4yYzE4LjYgMzkuNSAzNS40IDgwLjQgNTUuMiAxMTkuMWw0NDAuNCA0NjFjMTE1LjEtMTEzLjUgMjMxLjUtMjI2IDM0NS44LTM0MC4ybDYxLjMtMTAwLjhMNTA0LjcgMTA0IDExMy41IDQwMFoiLz48cGF0aCBkPSJNMzUzLjMgNDgzLjhjMjYuMS02Ni4zIDExNS42LTkxIDE3NS4zLTU1LjNhMTA3LjQgMTA3LjQgMCAwIDEgMzguNSAzNi41TTUxMSA3MjEuNGMyNi4yLTQ5LjggMTAzLjQtNTUuMyAxMzgtMTEuNmE3MS41IDcxLjUgMCAwIDEgMTQuNyAyNSIvPjxwYXRoIGQ9Ik01ODkuNCA0MDEuNGMuNi01Ni00NS45LTEwMy05OS0xMTMuNi02Ni45LTE2LjYtMTQ3LjUgMTguOC0xNjguMSA4Ny4yLTE2LjQgNTIuMiAxNS4zIDExMCA2NC4zIDEzMSA2Ny4yIDMzLjkgMTYyLjMgNy4zIDE5My40LTYzLjYgNi0xMyA4LjEtMjYuNyA5LjQtNDF6bTE0Mi42LTYuMWM2LjgtNDAuNC01My43LTU5LjgtNzYuNi0yOS0yMC44IDI1LjkgOC43IDYxLjQgMzguMSA1Ny44IDE3LjItLjEgMzQuNy0xMS4zIDM4LjQtMjguOHptLTQ0LjQgMjk1LjJjMTEuMy01My43LTM1LTEwNi40LTg4LjMtMTA4LjYtNTMtNi43LTEwOC40IDM4LjgtMTAzLjggOTMuNyAxLjYgNjAuOSA3MSAxMDIuNyAxMjcgODMuNmE5Mi41IDkyLjUgMCAwIDAgNjUuMS02OC43ek03NTIgNDk1YzcuMi00MC40LTUyLjMtNjMtNzctMzIuNi0yMi43IDI0IDIgNjMuMiAzMi4xIDYzIDE5LjYgMi4xIDQwLjktMTAuMSA0NC44LTMwLjN6Ii8+PC9nPjwvc3ZnPg==">
-<style>
-    body {
-        font-family: monospace;
-        margin: 0 auto;
-        max-width: 700px;
-    }
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>stl → svg ⋅ by @zopieux</title>
+    <link id="favicon" rel="shortcut icon" type="image/svg+xml"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgwIiBoZWlnaHQ9IjEwODAiPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIxMiI+PHBhdGggZD0ibTYwOS4xIDk4MC40IDEyLTU3LjdtMzk1LjEtMzgzLjRhODcxMjQyNjUgODcxMjQyNjUgMCAwIDAtMzk1IDM4My40TDExMy40IDQwMC4yIi8+PHBhdGggZD0iTTExMy41IDQwMC4yYzE4LjYgMzkuNSAzNS40IDgwLjQgNTUuMiAxMTkuMWw0NDAuNCA0NjFjMTE1LjEtMTEzLjUgMjMxLjUtMjI2IDM0NS44LTM0MC4ybDYxLjMtMTAwLjhMNTA0LjcgMTA0IDExMy41IDQwMFoiLz48cGF0aCBkPSJNMzUzLjMgNDgzLjhjMjYuMS02Ni4zIDExNS42LTkxIDE3NS4zLTU1LjNhMTA3LjQgMTA3LjQgMCAwIDEgMzguNSAzNi41TTUxMSA3MjEuNGMyNi4yLTQ5LjggMTAzLjQtNTUuMyAxMzgtMTEuNmE3MS41IDcxLjUgMCAwIDEgMTQuNyAyNSIvPjxwYXRoIGQ9Ik01ODkuNCA0MDEuNGMuNi01Ni00NS45LTEwMy05OS0xMTMuNi02Ni45LTE2LjYtMTQ3LjUgMTguOC0xNjguMSA4Ny4yLTE2LjQgNTIuMiAxNS4zIDExMCA2NC4zIDEzMSA2Ny4yIDMzLjkgMTYyLjMgNy4zIDE5My40LTYzLjYgNi0xMyA4LjEtMjYuNyA5LjQtNDF6bTE0Mi42LTYuMWM2LjgtNDAuNC01My43LTU5LjgtNzYuNi0yOS0yMC44IDI1LjkgOC43IDYxLjQgMzguMSA1Ny44IDE3LjItLjEgMzQuNy0xMS4zIDM4LjQtMjguOHptLTQ0LjQgMjk1LjJjMTEuMy01My43LTM1LTEwNi40LTg4LjMtMTA4LjYtNTMtNi43LTEwOC40IDM4LjgtMTAzLjggOTMuNyAxLjYgNjAuOSA3MSAxMDIuNyAxMjcgODMuNmE5Mi41IDkyLjUgMCAwIDAgNjUuMS02OC43ek03NTIgNDk1YzcuMi00MC40LTUyLjMtNjMtNzctMzIuNi0yMi43IDI0IDIgNjMuMiAzMi4xIDYzIDE5LjYgMi4xIDQwLjktMTAuMSA0NC44LTMwLjN6Ii8+PC9nPjwvc3ZnPg==">
+    <style>
+        body {
+            font-family: monospace;
+            margin: 0 auto;
+            max-width: 700px;
+        }
 
-    aside,
-    main,
-    form {
-        margin: 1rem 0;
-    }
+        aside,
+        main,
+        form {
+            margin: 1rem 0;
+        }
 
-    #dlall {
-        font-weight: bold;
-    }
+        #dlall {
+            font-weight: bold;
+        }
 
-    section {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 1rem;
-        width: 100%;
-        margin: 1rem 0;
-        min-height: 140px;
-        align-items: flex-start;
-    }
+        section {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 1rem;
+            width: 100%;
+            margin: 1rem 0;
+            min-height: 140px;
+            align-items: flex-start;
+        }
 
-    section figure {
-        margin: 0;
-        padding: 0;
-        width: calc(700px / 4 - 1rem * 3);
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+        section figure {
+            margin: 0;
+            padding: 0;
+            width: calc(700px / 4 - 1rem * 3);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
-    section figure img {
-        width: 100%;
-        /* height: 140px; */
-        aspect-ratio: 1;
-        object-fit: contain;
-    }
-</style>
+        section figure img {
+            width: 100%;
+            /* height: 140px; */
+            aspect-ratio: 1;
+            object-fit: contain;
+        }
+    </style>
 </head>
 
 <body>
@@ -60,6 +61,22 @@
     <main style="display: none">
         <form>
             <input id="stl" type="file" placeholder="STL file"><br>
+            <label for="reorient">
+                <input name="reorient" id="reorient" type="checkbox" checked="checked">
+                Reorient
+            </label><br>
+            <label for="reverseOrder">
+                <input name="reverseOrder" id="reverseOrder" type="checkbox">
+                Reverse visit order
+            </label><br>
+            <label for="reverseDepth">
+                <input name="reverseDepth" id="reverseDepth" type="checkbox">
+                Reverse depth mapping
+            </label><br>
+            <label for="nudge">
+                <input type="number" id="nudge" step="0.001" min="-1" max="1" value="-0.001">
+                nudge
+            </label>
         </form>
         <button type="button" id="dlall" disabled>Download all</button>
     </main>
@@ -79,40 +96,52 @@
         const a = document.createElement("a");
         document.body.appendChild(a);
         a.style = "display: none";
-        function dlFile(url, i) {
+        function dlFile(url, suffix) {
             a.href = url;
-            a.download = `${stem}-subpart-${i}.svg`;
+            a.download = `${stem}-${suffix}.svg`;
             a.click();
         }
 
         const form = document.querySelector('form');
         const stlInput = document.querySelector('input[type=file]');
+        const reorientCheckbox = document.getElementById("reorient");
+        const reverseOrderCheckbox = document.getElementById("reverseOrder");
+        const reverseDepthCheckbox = document.getElementById("reverseDepth");
+        const nudge = document.getElementById("nudge");
         const dlAllButton = document.getElementById('dlall');
+
         const section = document.querySelector('section');
 
         let stem = 'unknown';
         let blobUrls = [];
 
         dlAllButton.addEventListener('click', async (e) => {
-            blobUrls.forEach((url, i) => dlFile(url, i));
+            blobUrls.forEach(({ url, suffix }) => dlFile(url, suffix));
         });
 
-        stlInput.addEventListener('change', async (e) => {
-            e.preventDefault();
+        const compute = async () => {
             const file = stlInput.files[0];
+            if (!file) return;
+
             stem = file.name.split('.', 2)[0];
             dlAllButton.setAttribute('disabled', true);
             blobUrls = [];
             const buf = await file.arrayBuffer();
             const arr = new Int8Array(buf);
-            const ret = Module.StlToPaths(arr);
+            const ret = Module.StlToPaths(arr, reorientCheckbox.checked);
+            const easelSvg = Module.StlToEaselSvg(arr, 1.0,
+                parseFloat(nudge.value),
+                reorientCheckbox.checked,
+                reverseOrderCheckbox.checked,
+                reverseDepthCheckbox.checked,
+            );
             dlAllButton.removeAttribute('disabled');
             section.innerHTML = '';
-            for (let i = 0; i < ret.size(); i++) {
-                const content = ret.get(i);
+
+            const createFig = (content, suffix) => {
                 const blob = new Blob([content], { type: "image/svg+xml" }),
                     url = window.URL.createObjectURL(blob);
-                blobUrls.push(url);
+                blobUrls.push({ url, suffix });
                 const image = document.createElement('img');
                 const fig = document.createElement('figure');
                 image.addEventListener('load', () => url, { once: true });
@@ -123,12 +152,24 @@
                 dl.type = 'button';
                 dl.addEventListener('click', (e) => {
                     e.preventDefault();
-                    dlFile(url, i);
+                    dlFile(url, suffix);
                 })
                 fig.appendChild(dl);
-                section.appendChild(fig);
+                return fig;
             }
-        });
+
+            section.appendChild(createFig(easelSvg, 'easel'));
+            for (let i = 0; i < ret.size(); i++) {
+                const content = ret.get(i);
+                section.appendChild(createFig(content, `subpart-${i}`));
+            }
+        };
+
+        [stlInput, reorientCheckbox, reverseOrderCheckbox, reverseDepthCheckbox, nudge]
+            .forEach(el => el.addEventListener('change', (e) => {
+                e.preventDefault();
+                compute();
+            }));
     </script>
     {{{ SCRIPT }}}
 </body>

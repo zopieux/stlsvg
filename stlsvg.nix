@@ -89,6 +89,9 @@ stdenv.mkDerivation rec {
       -DMPFR_INCLUDE_DIR:STRING=${mympfr.dev}/include -DMPFR_LIBRARIES:STRING=${mympfr}/lib/libmpfr.a \
       -DBoost_INCLUDE_DIR:STRING=${myboost}
   '';
+  passthru = {
+    inherit mygmp mympfr myboost mycgal;
+  };
   checkPhase = "";
   installPhase = ''
     install -Dm644 -t "$out" stlsvg.js stlsvg.wasm

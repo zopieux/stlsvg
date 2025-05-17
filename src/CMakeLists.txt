@@ -10,7 +10,7 @@ add_executable(stlsvg
         stlsvg.cpp
         clipper/clipper.cpp)
 
-set_property(TARGET stlsvg PROPERTY CXX_STANDARD 17)
+set_property(TARGET stlsvg PROPERTY CXX_STANDARD 20)
 target_link_libraries(stlsvg PRIVATE CGAL::CGAL)
 
 set(CMAKE_C_OUTPUT_EXTENSION   ".o")
@@ -27,3 +27,7 @@ set(SHELL ${CMAKE_CURRENT_SOURCE_DIR}/emshell.html)
 set_target_properties(stlsvg PROPERTIES
         LINK_FLAGS
         "--bind --shell-file ${SHELL} --no-heap-copy -O3 -s ALLOW_MEMORY_GROWTH=1 -s MINIFY_HTML=0 -s WASM=1 -s ASYNCIFY=1")
+
+# add_executable(testing testing.cpp)
+# set_property(TARGET testing PROPERTY CXX_STANDARD 20)
+# target_link_libraries(testing PRIVATE CGAL::CGAL)

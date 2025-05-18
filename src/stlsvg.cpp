@@ -26,6 +26,11 @@
 
 #include "clipper/clipper.hpp"
 
+#define LOG(...)                                   \
+  do {                                             \
+    std::cerr << std::format(__VA_ARGS__) << "\n"; \
+  } while (0)
+
 namespace {
 
 using Polyline = std::vector<ClipperLib::DoublePoint>;
@@ -393,11 +398,6 @@ std::string WriteSvg(const Polylines& polygons, const ViewBox vbox) {
 
 }  // namespace svg
 
-#define LOG(...)                                   \
-  do {                                             \
-    std::cerr << std::format(__VA_ARGS__) << "\n"; \
-  } while (0)
-
 #ifdef __EMSCRIPTEN__
 std::vector<std::string> StlToPaths(const std::string& stl, bool reorient) {
   std::istringstream is(stl);
@@ -481,10 +481,11 @@ std::string StlToEaselSvg(const std::string& stl, double area_tol, double nudge,
   svg::PolyDepths depths;
   for (auto [z, paths] : out_paths) {
     if (paths.size() == 0) continue;
-    double realZ = reverseDepth ? z : bbox.z_span() - z;
+    double scaled_z = (z - bbox.zmin()) / bbox.z_span();
+    double depth = reverseDepth ? scaled_z : 1.0 - scaled_z;
     depths.push_back({
         .line = clean::PathsToPolylines(clean::Union(paths)),
-        .depth = realZ / bbox.z_span(),
+        .depth = depth,
     });
   }
   return svg::WriteSvgEasel(depths, viewbox);

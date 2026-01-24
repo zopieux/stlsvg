@@ -11,12 +11,27 @@
       devShell = pkgs.mkShell {
         packages = [
           pkgs.entr
+          pkgs.watchexec
           pkgs.cmake
           pkgs.emscripten
+          pkgs.cgal
+          pkgs.gmp
+          pkgs.mpfr
+          pkgs.boost
           (pkgs.writeShellScriptBin "configure-stlsvg" ''
             set -ex
+            # Configure Native Build
+            cmake -B build-native -S src -DCMAKE_BUILD_TYPE=Debug -DCGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE=TRUE
+
+            # Configure Emscripten Build
             ${pkgs.lib.trim defaultPackage.configureScript} \
+              -B build \
+              -S src \
               "$@"
+          '')
+          (pkgs.writeShellScriptBin "watch-build" ''
+            set -e
+            watchexec -w src -- "cmake --build build-native & ; cmake --build build & ; wait"
           '')
         ];
         inherit (defaultPackage) mygmp mympfr myboost mycgal;

@@ -14,14 +14,15 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <format>
+#include <sstream>
+#include <algorithm> // for stable_sort
 
 #include "orient.cpp"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/bind.h>
-
-#include <sstream>
 #endif
 
 #include "clipper/clipper.hpp"
@@ -69,10 +70,9 @@ std::optional<Surface_mesh> ReadSTL(Input& filename_or_buf) {
 
 std::vector<Surface_mesh> SplitConnectedComponents(Surface_mesh& mesh) {
   using face_descriptor = boost::graph_traits<Surface_mesh>::face_descriptor;
-  auto connected_map =
-      mesh.add_property_map<face_descriptor, Surface_mesh::faces_size_type>(
-              "f:connected", Surface_mesh::faces_size_type(0))
-          .first;
+  mesh.add_property_map<face_descriptor, Surface_mesh::faces_size_type>(
+              "f:connected", Surface_mesh::faces_size_type(0));
+  
   std::vector<Surface_mesh> components;
   PMP::split_connected_components(mesh, components);
   return components;
@@ -103,84 +103,16 @@ Polylines SliceAtPlane(const Surface_mesh& mesh, Plane_3 plane) {
   return polys_2;
 }
 
-#if 0
-Point_3 compute_centroid(const Surface_mesh& mesh) {
-    Vector_3 centroid(0, 0, 0);
-    std::size_t vertex_count = 0;
-
-    for (auto v : mesh.vertices()) {
-        centroid = centroid + (mesh.point(v) - CGAL::ORIGIN);
-        vertex_count++;
-    }
-
-    if (vertex_count > 0) {
-        centroid = centroid / vertex_count;
-    }
-
-    return CGAL::ORIGIN + centroid;
-}
-// Function to scale a mesh by a given factor from its center
-void scale_mesh(Surface_mesh& mesh, double scale_factor) {
-    // Step 1: Compute the centroid of the mesh
-    Point_3 centroid = compute_centroid(mesh);
-
-    // Step 2: Construct the scaling transformation
-    Aff_3 translate_to_origin(CGAL::TRANSLATION, -Vector_3(centroid - CGAL::ORIGIN));
-    Aff_3 scaling(CGAL::SCALING, scale_factor);
-    Aff_3 translate_back(CGAL::TRANSLATION, Vector_3(centroid - CGAL::ORIGIN));
-
-    // Combined transformation: translate to origin -> scale -> translate back
-    Aff_3 combined = translate_back * scaling * translate_to_origin;
-
-    // Step 3: Apply the transformation to all points in the mesh
-    PMP::transform(combined, mesh);
-}
-
-// Function to compute the bounding box of a mesh
-Surface_mesh create_bounding_box(const Surface_mesh& mesh) {
-  // Compute the bounding box
-  CGAL::Bbox_3 bbox = PMP::bbox(mesh);
-
-  // Create the bounding box corners
-  Point_3 p_min(bbox.xmin(), bbox.ymin(), bbox.zmin());
-  Point_3 p_max(bbox.xmax(), bbox.ymax(), bbox.zmax());
-
-  // Generate a cuboid (bounding box) mesh
-  Surface_mesh bbox_mesh;
-  CGAL::make_hexahedron(p_min, Point_3(bbox.xmax(), bbox.ymin(), bbox.zmin()),
-                        Point_3(bbox.xmax(), bbox.ymax(), bbox.zmin()),
-                        Point_3(bbox.xmin(), bbox.ymax(), bbox.zmin()),
-                        Point_3(bbox.xmin(), bbox.ymin(), bbox.zmax()),
-                        Point_3(bbox.xmax(), bbox.ymin(), bbox.zmax()),
-                        Point_3(bbox.xmax(), bbox.ymax(), bbox.zmax()),
-                        Point_3(bbox.xmin(), bbox.ymax(), bbox.zmax()),
-                        bbox_mesh);
-
-  return bbox_mesh;
-}
-#endif
-
 std::vector<std::tuple<double, double>> ComputeFacesOnZPlanes(
     const Surface_mesh& mesh, double tolerance = 1e-6) {
-  // Store the result as a vector of tuples
   std::vector<std::tuple<double, double>> result;
-
-  // Map for grouping faces by z-coordinate planes
-  // std::unordered_map<double, std::set<Face_index>> z_plane_faces;
   std::unordered_map<double, double> z_plane_areas;
 
-  // Iterate over all faces in the mesh
   for (Face_index f : mesh.faces()) {
-    // Compute the normal of the face
     Vector_3 normal = PMP::compute_face_normal(f, mesh);
-
-    // Check if the normal is aligned with the z-axis
     if (std::fabs(normal.x()) <= tolerance &&
         std::fabs(normal.y()) <= tolerance) {
-      // Get the face vertices
       auto vertices = CGAL::vertices_around_face(mesh.halfedge(f), mesh);
-
-      // Compute the average z-coordinate of the face vertices
       double z_avg = 0.0;
       int count = 0;
       for (auto v : vertices) {
@@ -188,20 +120,12 @@ std::vector<std::tuple<double, double>> ComputeFacesOnZPlanes(
         ++count;
       }
       z_avg /= count;
-
-      // Round z_avg to the nearest plane within tolerance
       double z_plane = std::round(z_avg / tolerance) * tolerance;
-
-      // Add the face to the appropriate z-plane group
-      // z_plane_faces[z_plane].insert(f);
-
-      // Compute the area of the face and add it to the total area for the plane
       double face_area = PMP::face_area(f, mesh);
       z_plane_areas[z_plane] += face_area;
     }
   }
 
-  // Build the result from the maps
   for (const auto& [z_plane, area] : z_plane_areas) {
     result.emplace_back(z_plane, area);
   }
@@ -352,7 +276,7 @@ std::string WriteSvgSplit(const PolyDepths& polygons, const ViewBox vbox) {
   for (const auto& poly : polygons) {
     WritePath(poly, vbox, s);
   }
-  s << R"#("</svg>)#";
+  s << "</svg>";
   return s.str();
 }
 
@@ -364,7 +288,7 @@ std::string WriteSvgEasel(const PolyDepths& polygons, const ViewBox vbox) {
     << R"(mm")"
     << R"(><title property="dc:title">stltosvg v1.0 -- copyright (c) Alexandre Macabies</title><desc property="dc:creator">stltosvg v1.0 -- copyright (c) Alexandre Macabies</desc>)"
     << R"(<g><g>)"
-    // Fucking BOUNDING BOX (depth=0 hack).
+    // Bounding Box
     << R"s(<g stroke="none" fill="rgb(255,255,255)"><g><path d=")s"
     << "M" << vbox.minX << "," << vbox.minY                                  //
     << " L" << (vbox.minX + vbox.width) << "," << vbox.minY                  //
@@ -378,9 +302,9 @@ std::string WriteSvgEasel(const PolyDepths& polygons, const ViewBox vbox) {
     s << R"s(<g stroke="none" fill="rgb()s" << g << "," << g << "," << g
       << R"s()"><g>)s";
     WritePath(poly, vbox, s);
-    s << R"("</g></g>)";
+    s << R"("></g></g>)";
   }
-  s << R"(</g></g>)" << R"#("</svg>)#";
+  s << R"(</g></g></svg>)";
   return s.str();
 }
 
@@ -392,13 +316,13 @@ std::string WriteSvg(const Polylines& polygons, const ViewBox vbox) {
     << R"(mm")"
     << R"(><title property="dc:title">stltosvg v1.0 -- copyright (c) Alexandre Macabies</title><desc property="dc:creator">stltosvg v1.0 -- copyright (c) Alexandre Macabies</desc>)";
   WritePath(polygons, vbox, s);
-  s << R"#("</svg>)#";
+  s << "</svg>";
   return s.str();
 }
 
 }  // namespace svg
 
-#ifdef __EMSCRIPTEN__
+// Logic moved outside #ifdef __EMSCRIPTEN__ for reusability
 std::vector<std::string> StlToPaths(const std::string& stl, bool reorient) {
   std::istringstream is(stl);
   auto maybe_mesh = slice::ReadSTL(is);
@@ -411,7 +335,6 @@ std::vector<std::string> StlToPaths(const std::string& stl, bool reorient) {
   std::vector<std::string> out;
   const auto comps = slice::SplitConnectedComponents(mesh);
   LOG("Found {} components", comps.size());
-  int i = 0;
   for (const auto& cmesh : comps) {
     const auto plane = slice::FindMiddleSlicePlane(cmesh);
     Polylines polylines = slice::SliceAtPlane(cmesh, plane);
@@ -420,8 +343,6 @@ std::vector<std::string> StlToPaths(const std::string& stl, bool reorient) {
   }
   return out;
 }
-
-#include <format>
 
 std::string StlToEaselSvg(const std::string& stl, double area_tol, double nudge,
                           bool reorient, bool reverseOrder, bool reverseDepth) {
@@ -446,18 +367,15 @@ std::string StlToEaselSvg(const std::string& stl, double area_tol, double nudge,
                      return reverseOrder ? !lower : lower;
                    });
 
-  using clean::Path;
-  using clean::Paths;
-
-  Paths bound_paths;
-  std::vector<std::tuple<double, Paths>> out_paths;
+  ClipperLib::Paths bound_paths;
+  std::vector<std::tuple<double, ClipperLib::Paths>> out_paths;
   // First pass: slice & collect bounds.
   for (auto [z, area] : faces_on_z_planes) {
     if (area <= 100 || IsEqual(z, 0.0, 1e-4)) continue;
     Polylines polylines = slice::SliceAtPlane(
-        mesh, Plane_3{Point_3{0, 0, z + nudge}, Vector_3{0, 0, 1}});
+        mesh, slice::Plane_3{slice::Point_3{0, 0, z + nudge}, slice::Vector_3{0, 0, 1}});
     LOG("Slicing at z={} (nudge={})", z, nudge);
-    Paths paths = clean::PolylinesToPaths(polylines);
+    ClipperLib::Paths paths = clean::PolylinesToPaths(polylines);
     bound_paths.insert(bound_paths.end(), paths.cbegin(), paths.cend());
     out_paths.push_back({z, paths});
   }
@@ -468,7 +386,7 @@ std::string StlToEaselSvg(const std::string& stl, double area_tol, double nudge,
   for (auto&& [z, paths] : out_paths) {
     for (auto it = paths.begin(); it != paths.end();) {
       const auto area = std::abs(ClipperLib::Area(*it));
-      if (area_tol != 1.0 && (area >= boundArea * area_tol)) {
+      if (area_tol != 1.0 && (area >= (double)boundArea * area_tol)) {
         it = paths.erase(it);
       } else if (area <= clean::toInt(1)) {
         it = paths.erase(it);
@@ -491,33 +409,11 @@ std::string StlToEaselSvg(const std::string& stl, double area_tol, double nudge,
   return svg::WriteSvgEasel(depths, viewbox);
 }
 
+#ifdef __EMSCRIPTEN__
 using namespace emscripten;
 EMSCRIPTEN_BINDINGS(Module) {
   register_vector<std::string>("Paths");
   function("StlToPaths", &StlToPaths);
   function("StlToEaselSvg", &StlToEaselSvg);
-}
-#else
-
-int main(int argc, char* argv[]) {
-  const std::string filename = argv[1];
-  auto opt_mesh = slice::ReadSTL(filename);
-  if (!opt_mesh.has_value()) return 1;
-  auto mesh = *opt_mesh;
-
-  if (false) {
-    // Define the transformation to swap Y and Z axes
-    slice::Aff_3 swap_yz(  //
-        1, 0, 0,           //
-        0, 0, 1,           //
-        0, 1, 0);
-    for (auto pt = mesh.points().begin(); pt != mesh.points().end(); ++pt) {
-      *pt = swap_yz(*pt);
-    }
-  }
-  using namespace slice;
-  using namespace clean;
-
-  // ...
 }
 #endif

@@ -199,18 +199,10 @@ Surface_mesh OrientModel(Surface_mesh mesh, double tolerance = 1e-4) {
   std::vector<Vector_3> all_face_normals;
   all_face_normals.reserve(num_faces(mesh));
 
-  Surface_mesh::Property_map<face_descriptor, Vector_3> fnormals_map;
-  bool created;
-  // Check if property map already exists, otherwise add it.
-  auto opt_fnormals_map =
-      mesh.property_map<face_descriptor, Vector_3>("f:normal");
-  if (opt_fnormals_map.second) {  // .second is true if map exists
-    fnormals_map = opt_fnormals_map.first;
-  } else {
-    boost::tie(fnormals_map, created) =
-        mesh.add_property_map<face_descriptor, Vector_3>("f:normal",
-                                                         Vector_3(0, 0, 0));
-  }
+  Surface_mesh::Property_map<face_descriptor, Vector_3> fnormals_map =
+      mesh.add_property_map<face_descriptor, Vector_3>("f:normal",
+                                                       Vector_3(0, 0, 0))
+          .first;
   PMP::compute_face_normals(mesh, fnormals_map,
                             PMP::parameters::geom_traits(Kernel()));
 

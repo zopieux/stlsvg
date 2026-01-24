@@ -14,11 +14,11 @@ add_library(clipper OBJECT
         clipper/clipper.hpp)
 target_include_directories(clipper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/clipper)
 
-# Generate index.html (and implicitly index.js, index.wasm)
-add_executable(index stlsvg.cpp)
-target_link_libraries(index PRIVATE clipper CGAL::CGAL)
-
 if(EMSCRIPTEN)
+    # Generate index.html (and implicitly index.js, index.wasm)
+    add_executable(index stlsvg.cpp)
+    target_link_libraries(index PRIVATE clipper CGAL::CGAL)
+
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     
     # Define shell file path
@@ -33,4 +33,8 @@ if(EMSCRIPTEN)
         "SHELL:-sWASM=1"
         "SHELL:-sASYNCIFY=1"
     )
+else()
+    # Native testing executable
+    add_executable(stlsvg-test main.cpp stlsvg.cpp)
+    target_link_libraries(stlsvg-test PRIVATE clipper CGAL::CGAL)
 endif()

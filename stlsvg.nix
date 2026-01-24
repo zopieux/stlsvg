@@ -16,12 +16,12 @@ let
     # Jesus fucking Christ.
     postPatch = ''
       substituteInPlace configure \
-        --replace 'as_fn_set_status $1' 'echo set_status $1' \
-        --replace '  exit $1' '  echo exit $1'
+        --replace-warn 'as_fn_set_status $1' 'echo set_status $1' \
+        --replace-warn '  exit $1' '  echo exit $1'
     '';
     configurePhase = ''
       HOME=$TMPDIR
-      ABI=x32 emconfigure ./configure --disable-shared --disable-assembly --disable-fat --prefix=$out
+      ABI=x32 emconfigure ./configure --enable-cxx --disable-shared --disable-assembly --disable-fat --prefix=$out
     '';
   });
 
@@ -43,25 +43,28 @@ let
     sha256 = "sha256:1wriv3nhyr5vmybgg9bk923dmr7lzq2301zns6jrrrv8plgxsfz1";
   };
 
-  mycgal = (cgal_5.override { inherit stdenv; }).overrideDerivation (old: {
+  mycgal = (cgal_5.override {
+    inherit stdenv;
+    gmp = mygmp;
+    mpfr = mympfr;
+  }).overrideDerivation (old: {
     propagatedBuildInputs = [ mygmp mympfr ];
     nativeBuildInputs = [ cmake ];
     doCheck = false;
     dontStrip = true;
     enableParallelBuilding = true;
     inherit NIX_CFLAGS_COMPILE EM_CACHE;
-    patches = old.patches ++ [ ./cgal.patch ];
     prePatch = ''
       substituteInPlace cmake/modules/CGAL_SetupCGALDependencies.cmake \
-        --replace 'find_package(Threads REQUIRED)' ' ' \
-        --replace 'target_link_libraries(''${target} INTERFACE Threads::Threads)' ' '
+        --replace-warn 'find_package(Threads REQUIRED)' ' ' \
+        --replace-warn 'target_link_libraries(''${target} INTERFACE Threads::Threads)' ' '
     '';
     configurePhase = ''
       HOME=$TMPDIR
       emcmake cmake . $cmakeFlags \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=$out \
-        -DGMP_INCLUDE_DIR:STRING=${mygmp.dev}/include -DGMP_LIBRARIES:STRING=${mygmp}/lib/libgmp.a \
+        -DGMP_INCLUDE_DIR:STRING=${mygmp.dev}/include -DGMP_LIBRARIES:STRING="${mygmp}/lib/libgmp.a;${mygmp}/lib/libgmpxx.a" \
         -DMPFR_INCLUDE_DIR:STRING=${mympfr.dev}/include -DMPFR_LIBRARIES:STRING=${mympfr}/lib/libmpfr.a \
         -DBoost_INCLUDE_DIR:STRING=${myboost} \
         -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -70,6 +73,26 @@ let
         -DCMAKE_CXX_FLAGS="-v -U__SSE2_MATH__ --ignore-dynamic-linking -DCGAL_HAS_NO_THREADS -U__GNUG__ -DCGAL_NO_ASSERTIONS -DCGAL_FORWARD -DBOOST_MATH_DISABLE_STD_FPCLASSIFY -DBOOST_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY -DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS"
     '';
   });
+
+  configureScript = ''
+    export CMAKE_PREFIX_PATH="${lib.makeSearchPath "lib/cmake" [ mycgal mygmp mympfr ]}:${mygmp}:${mympfr}"
+    export GMP_DIR="${mygmp}"
+    export MPFR_DIR="${mympfr}"
+    # Remove native libraries from the search path
+    export LIBRARY_PATH=""
+    export LD_LIBRARY_PATH=""
+    emcmake cmake $cmakeFlags \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=''${out:-$PWD/install} \
+      -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
+      -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+      -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+      -DCGAL_DIR:PATH=${mycgal}/lib/cmake/CGAL \
+      -DGMP_INCLUDE_DIR:STRING=${mygmp.dev}/include -DGMP_LIBRARIES:STRING="${mygmp}/lib/libgmp.a" \
+      -DGMPXX_LIBRARIES:STRING="${mygmp}/lib/libgmpxx.a" \
+      -DMPFR_INCLUDE_DIR:STRING=${mympfr.dev}/include -DMPFR_LIBRARIES:STRING=${mympfr}/lib/libmpfr.a \
+      -DBoost_INCLUDE_DIR:STRING=${myboost}
+  '';
 
 in
 stdenv.mkDerivation rec {
@@ -82,15 +105,10 @@ stdenv.mkDerivation rec {
   EM_CACHE = "/build/.cache";
   configurePhase = ''
     HOME=$TMPDIR
-    emcmake cmake . $cmakeFlags \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$out \
-      -DGMP_INCLUDE_DIR:STRING=${mygmp.dev}/include -DGMP_LIBRARIES:STRING=${mygmp}/lib/libgmp.a \
-      -DMPFR_INCLUDE_DIR:STRING=${mympfr.dev}/include -DMPFR_LIBRARIES:STRING=${mympfr}/lib/libmpfr.a \
-      -DBoost_INCLUDE_DIR:STRING=${myboost}
+    ${configureScript}
   '';
   passthru = {
-    inherit mygmp mympfr myboost mycgal;
+    inherit mygmp mympfr myboost mycgal configureScript;
   };
   checkPhase = "";
   installPhase = ''

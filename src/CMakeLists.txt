@@ -1,33 +1,36 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.15)
 project(stlsvg
         VERSION 1.0
         LANGUAGES CXX)
 
-find_package(CGAL REQUIRED COMPONENTS Core
-        CMAKE_FIND_ROOT_PATH_BOTH)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(stlsvg
-        stlsvg.cpp
-        clipper/clipper.cpp)
+find_package(CGAL REQUIRED COMPONENTS Core)
 
-set_property(TARGET stlsvg PROPERTY CXX_STANDARD 20)
-target_link_libraries(stlsvg PRIVATE CGAL::CGAL)
+add_library(clipper OBJECT
+        clipper/clipper.cpp
+        clipper/clipper.hpp)
+target_include_directories(clipper PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/clipper)
 
-set(CMAKE_C_OUTPUT_EXTENSION   ".o")
-set(CMAKE_CXX_OUTPUT_EXTENSION ".o")
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g4")
-set(CMAKE_EXECUTABLE_SUFFIX    ".html")
-set(CMAKE_SIZEOF_VOID_P 4)
+# Generate index.html (and implicitly index.js, index.wasm)
+add_executable(index stlsvg.cpp)
+target_link_libraries(index PRIVATE clipper CGAL::CGAL)
 
-set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
+if(EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    
+    # Define shell file path
+    set(SHELL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/emshell.html)
 
-set(SHELL ${CMAKE_CURRENT_SOURCE_DIR}/emshell.html)
-# Debugging:
-#   --emrun --emit-symbol-map -s DEMANGLE_SUPPORT=1 -s SAFE_HEAP=1
-set_target_properties(stlsvg PROPERTIES
-        LINK_FLAGS
-        "--bind --shell-file ${SHELL} --no-heap-copy -O3 -s ALLOW_MEMORY_GROWTH=1 -s MINIFY_HTML=0 -s WASM=1 -s ASYNCIFY=1")
-
-# add_executable(testing testing.cpp)
-# set_property(TARGET testing PROPERTY CXX_STANDARD 20)
-# target_link_libraries(testing PRIVATE CGAL::CGAL)
+    target_link_options(index PRIVATE
+        "SHELL:--bind"
+        "SHELL:--shell-file ${SHELL_FILE}"
+        "-O3"
+        "SHELL:-sALLOW_MEMORY_GROWTH=1"
+        "SHELL:-sMINIFY_HTML=0"
+        "SHELL:-sWASM=1"
+        "SHELL:-sASYNCIFY=1"
+    )
+endif()

@@ -81,7 +81,7 @@ let
     # Remove native libraries from the search path
     export LIBRARY_PATH=""
     export LD_LIBRARY_PATH=""
-    emcmake cmake $cmakeFlags \
+    emcmake cmake $cmakeFlags -Wno-dev \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=''${out:-$PWD/install} \
       -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
@@ -112,7 +112,6 @@ stdenv.mkDerivation rec {
   };
   checkPhase = "";
   installPhase = ''
-    install -Dm644 -t "$out" stlsvg.js stlsvg.wasm
-    install -Dm644 stlsvg.html "$out/index.html"
+    install -Dm644 -t "$out" index.js index.wasm index.html
   '';
 }
